@@ -16,6 +16,12 @@
 #include <stdlib.h>
 #include <string>
 #include <pthread.h>
+
+#include "CONF.h"
+
+#include "RCSwitch.h"
+
+
 using namespace std;
 
 void *task1 (void *dummyPt);
@@ -23,6 +29,8 @@ void *task1 (void *dummyPt);
 
 
 static int connFd;
+
+RCSwitch mySwitch = RCSwitch();
 
 string getMyIP()
 {
@@ -64,7 +72,8 @@ string getMyIP()
 
 int main(int argc, char* argv[])
 {
-	
+	 	mySwitch.enableTransmit(RF_EMITTER_PIN);
+	 	if (wiringPiSetup () == -1) return 1;
 
 		int pId, portNo, listenFd;
 		socklen_t len; //store size of the address
@@ -189,8 +198,10 @@ void *task1 (void *dummyPt)
     cout << "Thread " << pthread_self() << endl;
 	cout << "On your order !  " << endl;
 	
-	write(connFd, "Connected", 300);
+	write(connFd, "Connected", MSG_TO_SERVER_LEN);
 	
+	char msgtoServer[MSG_TO_SERVER_LEN];
+
     char data[300];
     bzero(data, 301);
     bool loop = true;
@@ -220,31 +231,25 @@ void *task1 (void *dummyPt)
 		if(M==0)
 		{	
 			//M0 : DO NOTHING, only echo for debug
-			write(connFd, "M0 command receveid (debug only)", 300);
-			char systemCommand[] = "echo M0 Nothing";
-			printf("%s\n",systemCommand);
-			system(systemCommand);
+			sprintf(msgtoServer,"M0 command receveid (debug only)");
+
 		}
 		else if(M==1)
 		{	
 			//M1 : TURN ON 3D Printer
-			write(connFd, "3D Printer : ON", 300);
-			char systemCommand[] = "echo M1 Nothing";
-			printf("%s\n",systemCommand);
-			system(systemCommand);
+			sprintf(msgtoServer ,"3D Printer : ON");
+			mySwitch.switchOn(PLUG_PRUSA_FIRST_CODE, PLUG_PRUSA_SECOND_CODE);
 		}
 		else if(M==2)
 		{	
 			//M2 : TURN OFF 3D Printer
-			write(connFd, "3D Printer : OFF", 300);
-			char systemCommand[] = "echo M2 Nothing";
-			printf("%s\n",systemCommand);
-			system(systemCommand);
+			sprintf(msgtoServer,"3D Printer : OFF");
+			mySwitch.switchOff(PLUG_PRUSA_FIRST_CODE, PLUG_PRUSA_SECOND_CODE);
 		}
 		else if(M==9)
 		{	
 			//M9 : STOP THE RASPBERRY PI
-			write(connFd, "Raspberry Pi Server : SHUT DOWN", 300);
+			sprintf(msgtoServer,"Raspberry Pi Server : SHUT DOWN");
 			
 			char systemCommand[] = "sudo halt";
 			printf("%s\n",systemCommand);
@@ -253,14 +258,17 @@ void *task1 (void *dummyPt)
 		else if(M==10)
 		{	
 			//M10 : RESTART THE RASPBERRY PI
-			write(connFd, "Raspberry Pi Server : RESTART", 300);
+			sprintf(msgtoServer, "Raspberry Pi Server : RESTART");
 			
 			char systemCommand[] = "sudo reboot";
 			printf("%s\n",systemCommand);
 			system(systemCommand);
 		}
 		
-		
+
+		cout << msgtoServer << endl;
+		write(connFd, msgtoServer, MSG_TO_SERVER_LEN);
+
 			
 		if(command == "exit")
 		{
