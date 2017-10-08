@@ -86,7 +86,7 @@ int main(int argc, char* argv[])
 		{
 			//cerr << "Syntax : ./server <port>" << endl;
 			//return 0;
-			cout << "Using default port" << endl;
+			//cout << "Using default port" << endl;
 			portNo = 51717;
 		}
 		else
@@ -126,11 +126,21 @@ int main(int argc, char* argv[])
 		
 		len = sizeof(clntAdd);
 		
-
-		
+		cout << endl;
+		cout << "### NETWORK CONF ###" << endl;
 		cout << "IP   : " << getMyIP() << endl;
 		cout << "PORT : " << portNo << endl;
+		cout << "####################" << endl;
+
+		cout << "#### GPIO CONF #####" << endl;
+		cout << "[" << RF_EMITTER_PIN << "] RF Emitter" << endl;
+		cout << "####################" << endl;
 		
+		cout << "#### PLUG CONF #####" << endl;
+		cout << "[" << PLUG_PRUSA_FIRST_CODE << "] [" << PLUG_PRUSA_SECOND_CODE << "] Prusa i3" << endl;
+		cout << "####################" << endl;
+		cout << endl;
+
 		while (true)
 		{
 			
@@ -197,6 +207,7 @@ void *task1 (void *dummyPt)
 {
     cout << "Thread " << pthread_self() << endl;
 	cout << "On your order !  " << endl;
+
 	
 	write(connFd, "Connected", MSG_TO_SERVER_LEN);
 	
@@ -237,7 +248,7 @@ void *task1 (void *dummyPt)
 		else if(M==1)
 		{	
 			//M1 : TURN ON 3D Printer
-			sprintf(msgtoServer ,"3D Printer : ON");
+			sprintf(msgtoServer ,"3D Printer : ON ");
 			mySwitch.switchOn(PLUG_PRUSA_FIRST_CODE, PLUG_PRUSA_SECOND_CODE);
 		}
 		else if(M==2)
