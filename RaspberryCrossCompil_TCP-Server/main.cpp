@@ -72,8 +72,10 @@ string getMyIP()
 
 int main(int argc, char* argv[])
 {
-	 	mySwitch.enableTransmit(RF_EMITTER_PIN);
+
 	 	if (wiringPiSetup () == -1) return 1;
+		pinMode(RF_EMITTER_PIN, OUTPUT) ;
+	 	mySwitch.enableTransmit(RF_EMITTER_PIN);
 
 		int pId, portNo, listenFd;
 		socklen_t len; //store size of the address
