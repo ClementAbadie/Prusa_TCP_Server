@@ -218,6 +218,10 @@ void *task1 (void *dummyPt)
     char data[300];
     bzero(data, 301);
     bool loop = true;
+
+	int WebCam_H = 800;
+	int WebCam_V = 600;
+
     while(loop)
     {    
         bzero(data, 301);
@@ -235,6 +239,9 @@ void *task1 (void *dummyPt)
         //cout << "RCV : " << command << endl;
         
 		int M = -1;
+
+
+
 		sscanf (data,"M%d",&M);
 		//printf ("M%d\n",M);
 
@@ -272,12 +279,55 @@ void *task1 (void *dummyPt)
 		{	
 			//M10 : RESTART THE RASPBERRY PI
 			sprintf(msgtoServer, "Raspberry Pi Server : RESTART");
-			
+
 			char systemCommand[] = "sudo reboot";
 			printf("%s\n",systemCommand);
 			system(systemCommand);
 		}
+		else if(M==100)
+		{
+			//M100 : RETURN THE VALUE OF THE TEMPERATURE SENSOR OF THE RASPBERRY PI
+
+			FILE *temperatureFile;
+			double T;
+			temperatureFile = fopen ("/sys/class/thermal/thermal_zone0/temp", "r");
+			if (temperatureFile == NULL); //print some message
+			fscanf (temperatureFile, "%lf", &T);
+			T /= 1000;
+			fclose (temperatureFile);
+
+			sprintf(msgtoServer, "%6.3f °C\n", T);
+		}
+		else if(M==200)
+		{
+			//M200 : STOP WEBCAM STREAM
+			sprintf(msgtoServer, "Raspberry Pi Server : Stop WebCam");
+
+			char systemCommand[] = "sudo pkill uv4l";
+			printf("%s\n",systemCommand);
+			system(systemCommand);
+		}
+		else if(M==201)
+		{
+			//M201 : RESTART WEBCAM STREAM
+
+			sscanf (data,"M%d:%d:%d",&M,&WebCam_H,&WebCam_V);
+
+			sprintf(msgtoServer, "Raspberry Pi Server : Restart WebCam (%dx%d)",WebCam_H,WebCam_V);
+
+
+			char systemCommand[MSG_TO_SERVER_LEN] = "sudo pkill uv4l";
+			printf("%s\n",systemCommand);
+			system(systemCommand);
+
+			usleep(500 * 1000);
+
+			sprintf(systemCommand,"sudo uv4l -nopreview --auto-video_nr --driver raspicam --encoding mjpeg --width %d --height %d --framerate 20 --server-option '--port=9090' --server-option '--max-queued-connections=30' --server-option '--max-streams=25' --server-option '--max-threads=29'",WebCam_H,WebCam_V);
+			printf("%s\n",systemCommand);
+			system(systemCommand);
+		}
 		
+
 
 		cout << msgtoServer << endl;
 		write(connFd, msgtoServer, MSG_TO_SERVER_LEN);
@@ -285,8 +335,8 @@ void *task1 (void *dummyPt)
 			
 		if(command == "exit")
 		{
-			loop = false;
-			break;
+//			loop = false;
+//			break;
 		}
     }
     cout << "\nClosing thread and connection !" << endl;
