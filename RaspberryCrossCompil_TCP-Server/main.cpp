@@ -327,7 +327,7 @@ void *task1 (void *dummyPt)
 			printf("%s\n",systemCommand);
 			system(systemCommand);
 		}
-		
+
 
 
 		cout << msgtoServer << endl;
