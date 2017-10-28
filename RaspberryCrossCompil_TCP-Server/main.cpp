@@ -221,6 +221,7 @@ void *task1 (void *dummyPt)
 
 	int WebCam_H = 800;
 	int WebCam_V = 600;
+	int WebCam_FR = 20;
 
     while(loop)
     {    
@@ -296,7 +297,7 @@ void *task1 (void *dummyPt)
 			T /= 1000;
 			fclose (temperatureFile);
 
-			sprintf(msgtoServer, "%6.3f °C\n", T);
+			sprintf(msgtoServer, "M100:%6.1f", T);
 		}
 		else if(M==200)
 		{
@@ -311,9 +312,9 @@ void *task1 (void *dummyPt)
 		{
 			//M201 : RESTART WEBCAM STREAM
 
-			sscanf (data,"M%d:%d:%d",&M,&WebCam_H,&WebCam_V);
+			sscanf (data,"M%d:%d:%d:%d",&M,&WebCam_H,&WebCam_V,&WebCam_FR);
 
-			sprintf(msgtoServer, "Raspberry Pi Server : Restart WebCam (%dx%d)",WebCam_H,WebCam_V);
+			sprintf(msgtoServer, "Raspberry Pi Server : Restart WebCam (%dx%d@%dfps)",WebCam_H,WebCam_V,WebCam_FR);
 
 
 			char systemCommand[MSG_TO_SERVER_LEN] = "sudo pkill uv4l";
@@ -322,7 +323,7 @@ void *task1 (void *dummyPt)
 
 			usleep(500 * 1000);
 
-			sprintf(systemCommand,"sudo uv4l -nopreview --auto-video_nr --driver raspicam --encoding mjpeg --width %d --height %d --framerate 20 --server-option '--port=9090' --server-option '--max-queued-connections=30' --server-option '--max-streams=25' --server-option '--max-threads=29'",WebCam_H,WebCam_V);
+			sprintf(systemCommand,"sudo uv4l -nopreview --auto-video_nr --driver raspicam --encoding mjpeg --width %d --height %d --framerate %d --server-option '--port=9090' --server-option '--max-queued-connections=30' --server-option '--max-streams=25' --server-option '--max-threads=29'",WebCam_H,WebCam_V,WebCam_FR);
 			printf("%s\n",systemCommand);
 			system(systemCommand);
 		}
